@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster - Gerenciador de Tarefas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .task-completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        .priority-high {
+            border-left: 4px solid #ef4444;
+        }
+        .priority-medium {
+            border-left: 4px solid #f59e0b;
+        }
+        .priority-low {
+            border-left: 4px solid #10b981;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .category-work { background-color: #e0f2fe; }
+        .category-personal { background-color: #ecfccb; }
+        .category-study { background-color: #fce7f3; }
+        .category-other { background-color: #ede9fe; }
+    </style>
+</head>
+
+
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-indigo-600">
+                    <i class="fas fa-tasks mr-2"></i>TaskMaster
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <h1 id="nm-text" style="font-weight: bold; font-size: 1.2rem; color: rgb(35, 35, 35);"></h1>
+                    <div class="relative" style="cursor: pointer; font-size: 1.7rem; color: #ef4444;">
+                        <i class="fa-solid fa-square-xmark"></i>
+                    </div>
+                </div>
+            </div>
+            <p class="text-gray-600 mt-2">Organize suas tarefas diárias de forma simples e eficiente</p>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 mr-4">
+                        <i class="fas fa-list-check text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Total de Tarefas</p>
+                        <h3 class="text-xl font-bold" id="total-tasks">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-check-circle text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Concluídas</p>
+                        <h3 class="text-xl font-bold" id="completed-tasks">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-exclamation-circle text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Pendentes</p>
+                        <h3 class="text-xl font-bold" id="pending-tasks">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4">
+                        <i class="fas fa-fire text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Prioritárias</p>
+                        <h3 class="text-xl font-bold" id="priority-tasks">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Task Form -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Adicionar Nova Tarefa</h2>
+            <form id="task-form" class="space-y-4">
+                <div>
+                    <label for="task-title" class="block text-sm font-medium text-gray-700 mb-1">Título da Tarefa</label>
+                    <input type="text" id="task-title" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                           placeholder="O que precisa ser feito?" required>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="task-due" class="block text-sm font-medium text-gray-700 mb-1">Data Limite</label>
+                        <input type="date" id="task-due" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label for="task-priority" class="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
+                        <select id="task-priority" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="low">Baixa</option>
+                            <option value="medium" selected>Média</option>
+                            <option value="high">Alta</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="task-category" class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                        <select id="task-category" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="work">Trabalho</option>
+                            <option value="personal">Pessoal</option>
+                            <option value="study">Estudo</option>
+                            <option value="other">Outro</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="task-notes" class="block text-sm font-medium text-gray-700 mb-1">Notas (Opcional)</label>
+                    <textarea id="task-notes" rows="2" 
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                              placeholder="Detalhes adicionais..."></textarea>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" 
+                            class="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition duration-300 flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Adicionar Tarefa
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Task Filters -->
+        <div class="flex flex-wrap items-center justify-between mb-6">
+            <div class="flex space-x-2 mb-4 md:mb-0">
+                <button id="filter-all" class="filter-btn active px-4 py-2 bg-indigo-600 text-white rounded-lg">
+                    Todas
+                </button>
+                <button id="filter-pending" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    Pendentes
+                </button>
+                <button id="filter-completed" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    Concluídas
+                </button>
+            </div>
+            
+            <div class="relative">
+                <select id="sort-tasks" 
+                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="date-added">Data de Adição</option>
+                    <option value="due-date">Data Limite</option>
+                    <option value="priority">Prioridade</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Task List -->
+        <div id="task-list" class="space-y-4">
+            <!-- Tasks will be added here dynamically -->
+            <div class="text-center py-10 text-gray-500" id="empty-state">
+                <i class="fas fa-clipboard-list text-4xl mb-4 text-gray-300"></i>
+                <h3 class="text-xl font-medium">Nenhuma tarefa encontrada</h3>
+                <p>Adicione sua primeira tarefa usando o formulário acima</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">Editar Tarefa</h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="edit-form" class="space-y-4">
+                    <input type="hidden" id="edit-id">
+                    
+                    <div>
+                        <label for="edit-title" class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                        <input type="text" id="edit-title" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                               required>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="edit-due" class="block text-sm font-medium text-gray-700 mb-1">Data Limite</label>
+                            <input type="date" id="edit-due" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label for="edit-priority" class="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
+                            <select id="edit-priority" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="low">Baixa</option>
+                                <option value="medium">Média</option>
+                                <option value="high">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="edit-category" class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                        <select id="edit-category" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="work">Trabalho</option>
+                            <option value="personal">Pessoal</option>
+                            <option value="study">Estudo</option>
+                            <option value="other">Outro</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="edit-notes" class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                        <textarea id="edit-notes" rows="3" 
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-between pt-4">
+                        <button type="button" id="delete-task" 
+                                class="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition duration-300">
+                            <i class="fas fa-trash mr-2"></i> Excluir
+                        </button>
+                        <div class="space-x-3">
+                            <button type="button" id="cancel-edit" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-300">
+                                Cancelar
+                            </button>
+                            <button type="submit" 
+                                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-300">
+                                <i class="fas fa-save mr-2"></i> Salvar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample tasks data
+        const wname = localStorage.getItem('nkl') || 'defaultUser';
+        var tasks = [];
+        let currentFilter = 'all';
+        let currentSort = 'date-added';
+        // DOM Elements
+        const taskForm = document.getElementById('task-form');
+        const taskList = document.getElementById('task-list');
+        const emptyState = document.getElementById('empty-state');
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-form');
+        const closeModal = document.getElementById('close-modal');
+        const cancelEdit = document.getElementById('cancel-edit');
+        const deleteBtn = document.getElementById('delete-task');
+        const filterAll = document.getElementById('filter-all');
+        const name = localStorage.getItem('nome') || 'Usuário';
+        const ne = localStorage.getItem('nkl');
+        const filterPending = document.getElementById('filter-pending');
+        const filterCompleted = document.getElementById('filter-completed');
+        const sortSelect = document.getElementById('sort-tasks');
+        const exituser = document.querySelector('.fa-square-xmark');
+        const statTotal = document.getElementById('total-tasks');
+        const statCompleted = document.getElementById('completed-tasks');
+        const statPending = document.getElementById('pending-tasks');
+        const statPriority = document.getElementById('priority-tasks');
+
+        (async () => {
+            try {
+                // Passo 1: Faz a requisição e aguarda o objeto de resposta
+                if (!ne) {
+                    alert('Você precisa estar logado para acessar esta página.') 
+                    open('/login.html', '_self');
+                    return
+                }
+                    const response = await fetch('https://tuttofa.online/ler/tafs',{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({
+                            nome:wname
+                        })
+                    });
+                
+
+                // Verifica se a resposta foi bem-sucedida (status 200-299)
+                if (!response.ok) {
+                throw new Error(`Erro na requisição: ${response.status}`);
+                }
+
+                // Passo 2: Extrai os dados do corpo da resposta e os converte para JSON
+                tasks1 = await response.json();
+                tasks = JSON.parse(tasks1)
+                filterAll.click()
+                updateStats()
+                
+                // Agora a variável 'tasks' contém a lista de tarefas
+                console.log(tasks);
+
+            } catch (error) {
+                // Este bloco é executado se houver algum erro na requisição ou na conversão
+                console.error("Ocorreu um erro ao buscar as tarefas:", error);
+            }
+        })();
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            updateStats();
+            document.getElementById('nm-text').innerText = `Olá, ${name}`;
+            // Check for saved theme preference
+            if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        });
+
+        
+        // Add new task
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('task-title').value;
+            const due = document.getElementById('task-due').value;
+            const priority = document.getElementById('task-priority').value;
+            const category = document.getElementById('task-category').value;
+            const notes = document.getElementById('task-notes').value;
+            
+            const newTask = {
+                id: Date.now(),
+                title,
+                due,
+                priority,
+                category,
+                notes,
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+            console.log(newTask);
+            console.log(Array.isArray(tasks))
+            tasks.push(newTask);
+            saveTasks();
+            renderTasks();
+            updateStats();
+            
+            // Reset form
+            taskForm.reset();
+            document.getElementById('task-priority').value = 'medium';
+            document.getElementById('task-category').value = 'work';
+            
+            // Show success message
+            showNotification('Tarefa adicionada com sucesso!', 'success');
+        });
+
+        // Render tasks based on filter and sort
+        function renderTasks() {
+            // Filter tasks
+            let filteredTasks = [...tasks];
+            
+            if (currentFilter === 'pending') {
+                filteredTasks = filteredTasks.filter(task => !task.completed);
+            } else if (currentFilter === 'completed') {
+                filteredTasks = filteredTasks.filter(task => task.completed);
+            }
+            
+            // Sort tasks
+            filteredTasks.sort((a, b) => {
+                if (currentSort === 'due-date') {
+                    if (!a.due && !b.due) return 0;
+                    if (!a.due) return 1;
+                    if (!b.due) return -1;
+                    return new Date(a.due) - new Date(b.due);
+                } else if (currentSort === 'priority') {
+                    const priorityOrder = { high: 3, medium: 2, low: 1 };
+                    return priorityOrder[b.priority] - priorityOrder[a.priority];
+                } else {
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                }
+            });
+            
+            // Clear task list
+            taskList.innerHTML = '';
+            
+            if (filteredTasks.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // Render each task
+            filteredTasks.forEach(task => {
+                const taskElement = createTaskElement(task);
+                taskList.appendChild(taskElement);
+            });
+        }
+
+        // Create task HTML element
+        function createTaskElement(task) {
+            const taskElement = document.createElement('div');
+            taskElement.className = `bg-white rounded-lg shadow p-4 fade-in priority-${task.priority} category-${task.category}`;
+            taskElement.dataset.id = task.id;
+            
+            // Format due date
+            let dueDateText = 'Sem data limite';
+            if (task.due) {
+                const dueDate = new Date(task.due);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (dueDate < today && !task.completed) {
+                    dueDateText = `<span class="text-red-500"><i class="fas fa-exclamation-triangle mr-1"></i> ${formatDate(task.due)}</span>`;
+                } else {
+                    dueDateText = formatDate(task.due);
+                }
+            }
+            
+            // Priority badge
+            const priorityBadge = {
+                high: '<span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Alta</span>',
+                medium: '<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Média</span>',
+                low: '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Baixa</span>'
+            }[task.priority];
+            
+            // Category badge
+            const categoryNames = {
+                work: 'Trabalho',
+                personal: 'Pessoal',
+                study: 'Estudo',
+                other: 'Outro'
+            };
+            
+            const categoryColors = {
+                work: 'bg-blue-100 text-blue-800',
+                personal: 'bg-green-100 text-green-800',
+                study: 'bg-pink-100 text-pink-800',
+                other: 'bg-purple-100 text-purple-800'
+            };
+            
+            const categoryBadge = `<span class="text-xs px-2 py-1 rounded-full ${categoryColors[task.category]}">${categoryNames[task.category]}</span>`;
+            
+            // Task HTML
+            taskElement.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start space-x-3 flex-1">
+                        <button class="complete-btn mt-1 p-2 rounded-full ${task.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}">
+                            <i class="fas ${task.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
+                        </button>
+                        <div class="flex-1 ${task.completed ? 'task-completed' : ''}">
+                            <h3 class="font-medium text-gray-800">${task.title}</h3>
+                            ${task.notes ? `<p class="text-sm text-gray-600 mt-1">${task.notes}</p>` : ''}
+                            <div class="flex flex-wrap items-center gap-2 mt-2 text-sm">
+                                ${priorityBadge}
+                                ${categoryBadge}
+                                <span class="text-gray-500"><i class="far fa-calendar-alt mr-1"></i>${dueDateText}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="edit-btn p-2 text-gray-400 hover:text-indigo-600">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add event listeners
+            const completeBtn = taskElement.querySelector('.complete-btn');
+            completeBtn.addEventListener('click', () => toggleTaskComplete(task.id));
+            
+            const editBtn = taskElement.querySelector('.edit-btn');
+            editBtn.addEventListener('click', () => openEditModal(task.id));
+            
+            return taskElement;
+        }
+
+        // Toggle task completion status
+        function toggleTaskComplete(taskId) {
+            const taskIndex = tasks.findIndex(task => task.id == taskId);
+            if (taskIndex !== -1) {
+                tasks[taskIndex].completed = !tasks[taskIndex].completed;
+                saveTasks();
+                renderTasks();
+                updateStats();
+                
+                const message = tasks[taskIndex].completed 
+                    ? 'Tarefa marcada como concluída!' 
+                    : 'Tarefa movida para pendentes.';
+                showNotification(message, 'info');
+            }
+        }
+
+        // Open edit modal
+        function openEditModal(taskId) {
+            const task = tasks.find(task => task.id == taskId);
+            if (!task) return;
+            
+            document.getElementById('edit-id').value = task.id;
+            document.getElementById('edit-title').value = task.title;
+            document.getElementById('edit-due').value = task.due || '';
+            document.getElementById('edit-priority').value = task.priority;
+            document.getElementById('edit-category').value = task.category;
+            document.getElementById('edit-notes').value = task.notes || '';
+            
+            editModal.classList.remove('hidden');
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+        }
+
+        // Save edited task
+        editForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const taskId = parseInt(document.getElementById('edit-id').value);
+            const taskIndex = tasks.findIndex(task => task.id == taskId);
+            
+            if (taskIndex !== -1) {
+                tasks[taskIndex] = {
+                    ...tasks[taskIndex],
+                    title: document.getElementById('edit-title').value,
+                    due: document.getElementById('edit-due').value || null,
+                    priority: document.getElementById('edit-priority').value,
+                    category: document.getElementById('edit-category').value,
+                    notes: document.getElementById('edit-notes').value || ''
+                };
+                
+                saveTasks();
+                renderTasks();
+                updateStats();
+                closeEditModal();
+                
+                showNotification('Tarefa atualizada com sucesso!', 'success');
+            }
+        });
+
+        // Delete task
+        deleteBtn.addEventListener('click', () => {
+            const taskId = parseInt(document.getElementById('edit-id').value);
+            tasks = tasks.filter(task => task.id !== taskId);
+            
+            saveTasks();
+            renderTasks();
+            updateStats();
+            closeEditModal();
+            
+            showNotification('Tarefa excluída!', 'warning');
+        });
+
+        // Close modal events
+        closeModal.addEventListener('click', closeEditModal);
+        cancelEdit.addEventListener('click', closeEditModal);
+        editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) closeEditModal();
+        });
+
+        // Filter buttons
+        filterAll.addEventListener('click', () => {
+            currentFilter = 'all';
+            updateActiveFilter();
+            renderTasks();
+        });
+        
+        filterPending.addEventListener('click', () => {
+            currentFilter = 'pending';
+            updateActiveFilter();
+            renderTasks();
+        });
+        
+        filterCompleted.addEventListener('click', () => {
+            currentFilter = 'completed';
+            updateActiveFilter();
+            renderTasks();
+        });
+
+        exituser.addEventListener('click', () => {
+            localStorage.removeItem('nkl');
+            window.location.href = '/login.html';
+        });
+        // Update active filter button styles
+        function updateActiveFilter() {
+            [filterAll, filterPending, filterCompleted].forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            });
+            
+            const activeBtn = {
+                'all': filterAll,
+                'pending': filterPending,
+                'completed': filterCompleted
+            }[currentFilter];
+            
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                activeBtn.classList.add('bg-indigo-600', 'text-white');
+            }
+        }
+
+        // Sort tasks
+        sortSelect.addEventListener('change', () => {
+            currentSort = sortSelect.value;
+            renderTasks();
+        });
+
+        // Save tasks to localStorage
+        async function saveTasks() {
+            const envio= await fetch('https://tuttofa.online/gravar/tafs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                nome: wname,
+                tasks: tasks
+                })
+            });
+        }
+
+        // Update statistics
+        function updateStats() {
+            statTotal.textContent = tasks.length;
+            statCompleted.textContent = tasks.filter(task => task.completed).length;
+            statPending.textContent = tasks.filter(task => !task.completed).length;
+            statPriority.textContent = tasks.filter(task => task.priority === 'high').length;
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium flex items-center ${type === 'success' ? 'bg-green-500' : type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'} fade-in`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'} mr-2"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('fade-in');
+                notification.classList.add('fade-out');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Format date as DD/MM/YYYY
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+    </script>
+</body>
+</html>
