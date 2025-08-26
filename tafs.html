@@ -301,7 +301,7 @@
                 // Passo 1: Faz a requisição e aguarda o objeto de resposta
                 if (!ne) {
                     alert('Você precisa estar logado para acessar esta página.') 
-                    window.location.href = '/login.html';
+                    window.location.href = '/TaskMaster/login.html';
                     return
                 }
                     const response = await fetch('https://tuttofa.online/ler/tafs',{
@@ -604,7 +604,7 @@
 
         exituser.addEventListener('click', () => {
             localStorage.removeItem('nkl');
-            window.location.href = '/login.html';
+            window.location.href = '/TaskMaster/login.html';
 
         });
         // Update active filter button styles
