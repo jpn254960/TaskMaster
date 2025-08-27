@@ -600,11 +600,10 @@
             renderTasks();
         });
 
-        exituser.addEventListener('click', () => {
-            localStorage.removeItem('nkl');
-            open('https://jpn254960.github.io/TaskMaster/login.html');
-
-        });
+     exituser.addEventListener('click', () => {
+    localStorage.removeItem('nkl');
+    window.location.href = '/TaskMaster/login.html';
+});
         // Update active filter button styles
         function updateActiveFilter() {
             [filterAll, filterPending, filterCompleted].forEach(btn => {
